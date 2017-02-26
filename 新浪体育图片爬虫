@@ -1,0 +1,24 @@
+from urllib import request
+import re,os
+def gethtml(url):
+    html=request.urlopen(url).read().decode('utf-8')
+    return html
+def getimg(html):
+    tardir=r'D:\testimg'
+    if not os.path.isdir(tardir):
+        os.mkdir(tardir)
+        
+    reg = r'src="(http:.+?\.jpg)"'
+    imgre=re.compile(reg)
+    imglist=re.findall(imgre,html)
+    print(imglist)
+    x=0
+    for imgurl in imglist:
+        #imgurl='http://sports.sina.com.cn'+imgurl
+        request.urlretrieve(imgurl,r'D:\testimg\%s.jpg'%x)
+        x+=1
+html=gethtml('http://sports.sina.com.cn/')
+#print(imglist)
+print(html)
+getimg(html)
+#print(imglist)
