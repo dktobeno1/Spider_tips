@@ -1,0 +1,42 @@
+from http import cookiejar
+from urllib import request,parse
+import gzip,re
+def ungzip(data):
+    try:        # 尝试解压
+        print('正在解压.....')
+        data = gzip.decompress(data)
+        print('解压完毕!')
+    except:
+        print('未经压缩, 无需解压')
+    return data
+#filename='cookie.txt'
+
+req=request.Request('https://www.zhihu.com/')
+response=request.urlopen(req).read()
+resp_unqzip=ungzip(response).decode('utf-8')
+print(resp_unqzip)
+pattern=re.compile(r'name="_xsrf" value="(.*?)"')
+l=re.findall(pattern,resp_unqzip)
+print(l[0])
+_xsrf=l[0]
+cookie=cookiejar.MozillaCookieJar()
+handler=request.HTTPCookieProcessor(cookie)
+opener=request.build_opener(handler)
+url='https://www.zhihu.com/login/phone_num'
+data={'_xsrf':_xsrf,'password':你的密码,'phone_num':你的手机号
+    }
+postdata=parse.urlencode(data).encode('utf-8')
+headers={'Accept': '*/*','Accept-Encoding': 'gzip, deflate, br',
+         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36',
+'Connection': 'keep-alive','Host': 'www.zhihu.com','Accept-Language': 'zh-CN,zh;q=0.8'
+    }
+req_sec=request.Request(url,postdata,headers)
+res_sec=opener.open(req_sec)
+print(res_sec.read().decode('utf-8'))
+#cookie.save(ignore_discard=True, ignore_expires=True)
+test_url='https://www.zhihu.com/个人主页url路径'
+test_html=opener.open(test_url).read().decode('utf-8')
+print(test_html)
+
+
+
