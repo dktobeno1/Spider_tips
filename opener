@@ -1,0 +1,8 @@
+from http import cookiejar
+from urllib import request
+def getOpener():
+    #创建opener，可自动处理cookies
+    cj = cookiejar.CookieJar()
+    pro = request.HTTPCookieProcessor(cj)
+    opener = request.build_opener(pro)
+    return opener
