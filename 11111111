@@ -1,0 +1,111 @@
+# -*- coding: utf-8 -*-
+
+#from urllib import request,parse
+import gzip,re,requests,time,random
+import orm_panjueshu
+#import myproxy
+import asyncio
+from model_panjueshu import panjueshu
+from multiprocessing import Pool
+#loop=asyncio.get_event_loop()
+
+def create(loop):
+    yield from orm_panjueshu.create_pool(loop,user='root',password='password',db='caipan')
+
+def ungzip(data):
+    try:        # 尝试解压
+        print('正在解压.....')
+        data = gzip.decompress(data)
+        print('解压完毕!')
+    except:
+        print('未经压缩, 无需解压')
+    return data
+	
+@asyncio.coroutine
+def test(name,types,num,court,dates,url,docid,proced,cause,area,yiju,content):
+    p=panjueshu(name=name,cause=cause,docid=docid,area=area,proced=proced,types=types,num=num,court=court,dates=dates,yiju=yiju,content=content,url=url)
+    yield from p.save()
+
+loop.run_until_complete(create(loop))
+def getcontent(num_index):
+    global ip_time,proxy_ip
+    str_index=str(num_index)
+    url='http://wenshu.court.gov.cn/List/ListContent'
+    user_agent = ['Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.122 Safari/537.36 SE 2.X MetaSr 1.0',
+                    'Mozilla/5.0 (Macintosh; PPC Mac OS X; U; en) Opera 8.0',
+                    'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0',
+                    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 ']
+    get_ip = ['122.193.14.108:81',
+              '59.63.123.63:808',
+              '125.88.74.122:81',
+              '183.95.80.165:8080',
+              '59.37.160.57:8081',
+              '124.133.230.254:80',
+              '124.88.67.24:843',
+              '59.56.253.58:8081',
+              '101.71.17.132:8081',
+              '112.87.238.24:8081',
+              '183.78.183.156:82',
+              '124.88.67.83:843',
+              '111.76.129.233:808',
+              '59.48.41.186:8081'
+              ]
+    data={'Param':'裁判年份:2016',
+	'Page':'20',
+	'Order':'法院层级',
+	'Index':str_index,
+	'Direction':'asc'
+
+	}
+	#send_data=parse.urlencode(data).encode('utf-8')
+    headers={'X-Requested-With': 'XMLHttpRequest',
+	'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+	'User-Agent': random.choice(user_agent),
+	'Connection': 'keep-alive','Host': 'wenshu.court.gov.cn'
+	}
+    if not proxy_ip or (int(time.time())-ip_time) > 60:
+        proxy_ip={'http':'http://%s'%random.choice(get_ip)}
+        ip_time=int(time.time())
+    resp=requests.post(url,data=data,headers=headers,proxies=proxy_ip,time_out=60)
+    respons=resp.text
+
+	#response=dict(response)
+	#print(response)
+	#with open('wenjian.txt','w') as f:
+		#f.write(respons)
+    pattern=re.compile(r'{\\"裁判要旨段原文\\":\\"(.*?)\\",\\"案件类型\\":\\"(.*?)\\",\\"裁判日期\\":\\"(.*?)\\",\\"案件名称\\":\\"(.*?)\\",\\"文书ID\\":\\"(.*?)\\",\\"审判程序\\":\\"(.*?)\\",\\"案号\\":\\"(.*?)\\",\\"法院名称\\":\\"(.*?)\\"}')
+    list_info = re.findall(pattern,respons)
+    print(list_info)
+    for info in list_info:
+        try:
+            cause = info[0]
+            types = info[1]
+            dates = info[2]
+            name = info[3]
+            docid = info[4]
+            proced = info[5]
+            num = info[6]
+            court = info[7]
+            url='http://wenshu.court.gov.cn/content/content?DocID=%s'%info[4]
+	    #url_content = 'http://wenshu.court.gov.cn/CreateContentJS/CreateContentJS.aspx?DocID=%s'%info
+	    #resp_content=requests.get(url_content).text
+            loop.run_until_complete(test(name,types,num,court,dates,url,docid,proced))
+        except:
+            print('%s爬取失败'%name)
+
+def duoye(page):
+    for num in range(page-10,page):
+        get_content(num)
+
+if __name__=='__main__':
+    proxy_ip=None
+    ip_time=0
+    loop = asyncio.get_event_loop()
+    p=Pool(3)
+    for i in range(1,4):
+        p.apply_async(duoye,args=(i*10+1,))
+    p.close()
+    p.join()
+    
+
+
