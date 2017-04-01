@@ -19,6 +19,7 @@ def get_gd(name_company):
     #print(content_info)
     my_driver.close()
     soup = BeautifulSoup(content_info,'lxml')
+    print('公司股东：')
     for a in soup.findAll('a',{"event-name":"company-detail-investment"}):
         #print(a)
         print(a.string)
