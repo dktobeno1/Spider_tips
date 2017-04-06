@@ -255,10 +255,10 @@ def worker(que):
     conn.close()
 if __name__=='__main__':
     q = multiprocessing.Queue()
-    for a in range(1,3):
+    for a in range(3,8):
         q.put(a)
     r = []
-    for b in range(2):
+    for b in range(3):
         print('进程 %s'%(b+1))
         p = multiprocessing.Process(target = worker,args = (q,))
         p.start()
@@ -266,4 +266,3 @@ if __name__=='__main__':
         time.sleep(3)
     for x in r:
         x.join()
-        
