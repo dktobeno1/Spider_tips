@@ -4,6 +4,9 @@ import win32con
 import win32gui
 from ctypes import *
 import time
+
+ip_count = 3 #ip个数
+
 VK_CODE = {
   'backspace':0x08,
   'tab':0x09,
@@ -67,6 +70,7 @@ VK_CODE = {
   'x':0x58,
   'y':0x59,
   'z':0x5A,
+  'win':0x5B,
   'numpad_0':0x60,
   'numpad_1':0x61,
   'numpad_2':0x62,
@@ -193,18 +197,41 @@ def key_input(string):
         win32api.keybd_event(VK_CODE[c],0,0,0)
         win32api.keybd_event(VK_CODE[c],0,win32con.KEYEVENTF_KEYUP,0)
         time.sleep(0.01)
-
+def copy_like(key_lt, key_st):
+    win32api.keybd_event(VK_CODE[key_lt],0,0,0)
+    time.sleep(0.01)
+    win32api.keybd_event(VK_CODE[key_st],0,0,0)
+    win32api.keybd_event(VK_CODE[key_st],0,win32con.KEYEVENTF_KEYUP,0)
+    time.sleep(0.01)
+    win32api.keybd_event(VK_CODE[key_lt],0,win32con.KEYEVENTF_KEYUP,0)
+def function_sclick(key):
+    win32api.keybd_event(VK_CODE[key],0,0,0)
+    win32api.keybd_event(VK_CODE[key],0,win32con.KEYEVENTF_KEYUP,0)
 if __name__ == '__main__':
     #get_mouse_pos()
-    mouse_dlclick(784,33)
     time.sleep(2)
-    while True:
-        mouse_rclick(425,280)
-        time.sleep(0.5)
-        mouse_lclick(472,352)
-        time.sleep(0.5)
-        win32api.keybd_event(VK_CODE['space'],0,0,0)
-        win32api.keybd_event(VK_CODE['space'],0,win32con.KEYEVENTF_KEYUP,0)
-        time.sleep(2)
-    
-
+    copy_like('win','r')
+    time.sleep(0.1)
+    key_input('cmd')
+    time.sleep(0.1)
+    function_sclick('enter')
+    time.sleep(0.2)
+    y = 66
+    for a in range(ip_count):
+        y += 15
+        mouse_dlclick(5,y)
+        time.sleep(0.1)
+        copy_like('ctrl','c')
+        time.sleep(0.05)
+        copy_like('alt','tab')
+        time.sleep(0.1)
+        key_input('ping')
+        time.sleep(0.01)
+        function_sclick('space')
+        time.sleep(0.05)
+        mouse_rclick(304,313)
+        time.sleep(0.1)
+        function_sclick('p')
+        time.sleep(0.01)
+        function_sclick('enter')
+        time.sleep(8)
