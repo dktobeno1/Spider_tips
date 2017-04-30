@@ -4,7 +4,7 @@ import re,requests,time,random,queue,json
 import multiprocessing
 import mysql.connector
 
-anyou = '非刑事赔偿'
+anyou = '海事海商纠纷'
 year = '2016'
 pro_count = 15 #进程数
 list_date = ['2016-01-01 TO 2016-01-31',
@@ -534,7 +534,46 @@ def get_ips():
                '218.241.153.211:81',
                '106.120.78.129:80',
                '218.4.101.130:83',
-               '222.76.217.25:80'
+               '222.76.217.25:80',
+               '183.133.51.159:80',
+               '58.23.16.240:80',
+               '220.172.160.222:80',
+               '122.228.179.178:80',
+               '183.240.87.107:80',
+               '111.56.7.8:80',
+               '115.200.20.246:80',
+               '171.121.97.69:80',
+               '61.135.217.3:80',
+               '118.122.250.109:80',
+               '115.200.20.246:80',
+               '27.222.115.132:80',
+               '218.4.101.130:83',
+               '183.240.87.107:80',
+               '111.206.163.235:80',
+               '124.235.182.130:80',
+               '175.148.24.109:80',
+               '221.238.140.210:81',
+               '115.200.171.40:80',
+               '122.228.179.178:80',
+               '1.28.183.129:80',
+               '61.135.217.3:80',
+               '115.200.172.82:80',
+               '175.162.64.103:80',
+               '175.170.124.217:80',
+               '140.255.38.161:80',
+               '119.254.84.90:80',
+               '171.121.97.69:80',
+               '175.146.134.23:80',
+               '219.157.35.76:80',
+               '222.169.193.162:8099',
+               '222.92.141.250:80',
+               '111.206.163.235:80',
+               '115.200.171.40:80',
+               '111.13.7.42:81',
+               '175.170.124.217:80',
+               '118.122.250.109:80',
+               '124.88.67.63:80',
+               '115.85.206.165:80'
                ]
     return list_ip
 
@@ -579,7 +618,7 @@ def failHandler():
                         continue
         else:
             print('>>>>>>>>>>>>>>>>fail补充抓取完成<<<<<<<<<<<<<<<<<<<')
-            fsql = 'insert into panjueshu (name, yiju, docid, produce, type, num, court, date, content, url) select name, yiju, docid, produce, type, num, court, date, content, url from failure'
+            fsql = 'insert into panjueshu (name, yiju, area, docid, produce, type, num, court, date, content, url) select name, yiju, area, docid, produce, type, num, court, date, content, url from failure'
             cursor.execute(fsql)
             conn.commit()
             cursor.execute('truncate table failure')
@@ -660,7 +699,7 @@ def worker(que):
                     proxy_ip={'http':'http://%s'%random.choice(get_ips())}
                     ip_time=int(time.time())
                 print('正在爬取%s第%s页(%s)'%(d_caipan, index, province))
-                resp=requests.post(the_url,data = data,headers = headers[0],proxies=proxy_ip,timeout=40)
+                resp=requests.post(the_url,data = data,headers = headers[0],proxies=proxy_ip,timeout=50)
                 time.sleep(1)
                 #respons=resp.text
                 #pattern=re.compile(r'{\\"裁判要旨段原文\\":\\"(.*?)\\",\\"案件类型\\":\\"(.*?)\\",\\"裁判日期\\":\\"(.*?)\\",\\"案件名称\\":\\"(.*?)\\",\\"文书ID\\":\\"(.*?)\\",\\"审判程序\\":\\"(.*?)\\",\\"案号\\":\\"(.*?)\\",\\"法院名称\\":\\"(.*?)\\"}')
@@ -701,7 +740,7 @@ def worker(que):
                     try_i += 1
                     time.sleep(try_i * 1.5)
                     if try_i > 4:
-                        cursor.execute('insert into failure (name, yiju, docid, produce, type, num, court, date, url, doc_url) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',[name, yiju, docid, produce, type, num, court, date, url, doc_url])
+                        cursor.execute('insert into failure (name, yiju, area, docid, produce, type, num, court, date, url, doc_url) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',[name, yiju, province, docid, produce, type, num, court, date, url, doc_url])
                         conn.commit()
                         print ('!!!!!!!!!!!!!!!!!!! 请求过多,%s页第%s个案件:%s 写入Failure表中(%s %s时段) !!!!!!!!!!!!!!!!!!!'% (index, i, name, province, d_caipan))
                         i += 1
@@ -743,8 +782,8 @@ def worker(que):
                     #print(doc_url)
                     continue
                 print('%s第%s页第%s个案件导入数据库(%s)'% (d_caipan, index, i, province))
-                sql = 'insert into panjueshu (name, yiju, docid, produce, type, num, court, date, content, url) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
-                cursor.execute(sql,[name, yiju, docid, produce, type, num, court, date, content, url])
+                sql = 'insert into panjueshu (name, yiju, area, docid, produce, type, num, court, date, content, url) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+                cursor.execute(sql,[name, yiju, province, docid, produce, type, num, court, date, content, url])
             conn.commit()               
         #print(self.count)
     if not que.empty():
@@ -768,4 +807,3 @@ if __name__=='__main__':
         x.join()
     failHandler()
         
-
